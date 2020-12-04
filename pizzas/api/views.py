@@ -14,6 +14,12 @@ class PizzaList(APIView):
     def get(self, request,format=None):
         try:
             pizza = Pizza.objects.all()
+            size = self.request.query_params.get('size', None)
+            if size is not None:
+                pizza = pizza.filter(size=size)
+            topping = self.request.query_params.get('topping', None)
+            if topping is not None:
+                pizza = pizza.filter(topping=topping)
             serializer=PizzaReadSerializer(pizza,many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except:

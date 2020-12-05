@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Pizza App</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
+        integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <h1 class="display-4 d-inline-block text-center col-9 ">Pizza App</h1>
+            <a href="index.html" class="btn btn-success col-2 m-4 ">Get a List of Pizzas</a>
+        </div>
+
+        <div class="row">
+            <form id="addPizza" style="width: 400px; margin: 20px ;">
+                <h4>Edit Pizza</h4>
+                <div class="form-group">
+                    <input type="text" id="name" class="form-control" placeholder="New Name...">
+                </div>
+
+                <div class="form-group">
+                    <label for="type">Choose Pizza Type :</label>
+                    <select name="type" id="type" class="custom-select">
+                        <option value="REGULAR">Regular</option>
+                        <option value="SQUARE">Square</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="size">Choose Pizza Size :</label>
+                    <select name="size" id="size" class="custom-select"></select>
+                </div>
+                <div class="form-group">
+                    <label for="topping">Choose Pizza Topping :</label>
+                    <select name="topping" id="topping" class="custom-select"></select>
+                </div>
+                <input type="submit" class="btn btn-secondary" value="Submit">
+            </form>
+            <form id="addSize" class="col-2" style="width: 400px; margin: 20px ;">
+                <h4>Add a Size</h4>
+                <div class="form-group">
+                    <input type="text" id="nameSize" class="form-control" placeholder="Add Size...">
+                </div>
+                <input type="submit" class="btn btn-secondary" value="Submit">
+            </form>
+            <form id="addTopping" class="col-2" style="width: 400px; margin: 20px ;">
+                <h4>Add a Topping</h4>
+                <div class="form-group">
+                    <input type="text" id="nameTopping" class="form-control" placeholder="Add Topping...">
+                </div>
+                <input type="submit" class="btn btn-secondary" value="Submit">
+            </form>
+        </div>
+    </div>
+    <script>
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const id = urlParams.get('id')
+        fetch('http://127.0.0.1:8000/api/pizzas/'+id)
+        .then((res) => res.json())
+        .then((data) => {
+            document.getElementById("name").defaultValue = data.name;
+            document.getElementById("size").defaultValue = data.size;
+            document.getElementById("type").defaultValue = data.type;
+            document.getElementById("topping").defaultValue = data.topping;            
+        })
+
+        document.getElementById('addPizza').addEventListener('submit', addPizza);
+        document.getElementById('addSize').addEventListener('submit', addSize);
+        document.getElementById('addTopping').addEventListener('submit', addTopping);
+
+        function loadSizes(){
+        fetch('http://127.0.0.1:8000/api/pizzas/sizes')
+            .then((res) => res.json())
+            .then((data) => {
+                let output = '';
+                data.forEach(function (size) {
+                    output += `
+                        <option value="${size.id}">${size.name}</option>
+                    `;
+                });
+                document.getElementById('size').innerHTML = output;
+            })
+        }
+
+        function loadToppings(){
+        fetch('http://127.0.0.1:8000/api/pizzas/toppings')
+            .then((res) => res.json())
+            .then((data) => {
+                let output = '';
+                data.forEach(function (topping) {
+                    output += `
+                    <option value="${topping.id}">${topping.name}</option>
+                `;
+                });
+                document.getElementById('topping').innerHTML = output;
+            })
+        }
+        loadSizes();
+        loadToppings();
+
+
+
+        function addPizza(e) {
+            e.preventDefault();
+            let name = document.getElementById('name').value;
+            let type = document.getElementById('type').value;
+            let size = document.getElementById('size').value;
+            let topping = document.getElementById('topping').value;
+
+            fetch('http://127.0.0.1:8000/api/pizzas/'+id, {
+                method: 'PUT',
+                headers: {
+                    'Accept': 'application/json, text/plain, */*',
+                    'Content-type': 'application/json'
+                },
+                body: JSON.stringify({ name, type, size, topping })
+            })
+                .then(
+                    (res) => {
+                        if (res.status == 201) {
+                            document.getElementById("addPizza").reset();
+                            alert("Pizza has been edited!!");
+                        }
+                        else {
+                            alert("An error occured while editing the Pizza");
+                        }
+                    }
+                )
+                .then((data) => console.log(data))
+        }
+
+        function addSize(e) {
+            e.preventDefault();
+            let name = document.getElementById('nameSize').value;
+
+            fetch('http://127.0.0.1:8000/api/pizzas/sizes', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json, text/plain, */*',
+                    'Content-type': 'application/json'
+                },
+                body: JSON.stringify({ name })
+            })
+                .then(
+                    (res) => {
+                        if (res.status == 201) {
+                            document.getElementById("addSize").reset();
+                            loadSizes();
+                            alert("New Size has been added!!");
+                        }
+                        else {
+                            alert("An error occured while creating a new Size");
+                        }
+                    }
+                )
+                .then((data) => console.log(data))
+        }
+
+        function addTopping(e) {
+            e.preventDefault();
+            let name = document.getElementById('nameTopping').value;
+
+            fetch('http://127.0.0.1:8000/api/pizzas/toppings', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json, text/plain, */*',
+                    'Content-type': 'application/json'
+                },
+                body: JSON.stringify({ name })
+            })
+                .then(
+                    (res) => {
+                        if (res.status == 201) {
+                            document.getElementById("addTopping").reset();
+                            loadToppings();
+                            alert("New Topping has been added!!");
+                        }
+                        else {
+                            alert("An error occured while creating a new Topping");
+                        }
+                    }
+                )
+                .then((data) => console.log(data))
+        }
+
+    </script>
+</body>
+
+</html>
